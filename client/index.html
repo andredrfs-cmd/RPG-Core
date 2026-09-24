@@ -20,11 +20,25 @@
     </section>
   </div>
 
-  <main>
-    <h1>RPG-Core</h1>
-    <p id="status">Conectando ao servidor...</p>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <p class="help">Movimente-se com WASD ou as setas. A câmera acompanha o jogador local.</p>
+  <main class="game-layout">
+    <section class="game-section" aria-label="Mundo do jogo">
+      <h1>RPG-Core</h1>
+      <p id="status">Conectando ao servidor...</p>
+      <canvas id="gameCanvas" width="640" height="640"></canvas>
+      <p class="help">Movimente-se com WASD ou as setas. A câmera acompanha o jogador local.</p>
+    </section>
+
+    <aside class="side-panel" aria-label="Interface do jogador">
+      <section class="panel-card">
+        <h2>Jogador</h2>
+        <p id="playerPanelName">Aguardando entrada...</p>
+        <div class="stat-row"><span>Vida</span><strong id="playerHp">100 / 100</strong></div>
+      </section>
+      <section class="panel-card">
+        <h2>Inventário</h2>
+        <p class="panel-placeholder">O inventário será adicionado em uma etapa futura.</p>
+      </section>
+    </aside>
   </main>
 
   <script type="module" src="/js/main.js"></script>

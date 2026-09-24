@@ -13,7 +13,7 @@ function getTileType(column, row, world) {
 }
 
 export function drawWorld(ctx, canvas, world, camera) {
-  const tileSize = world.tileSize;
+  const tileSize = world.renderedTileSize || world.tileSize;
   const firstColumn = Math.floor(camera.x / tileSize) - 1;
   const firstRow = Math.floor(camera.y / tileSize) - 1;
   const lastColumn = Math.ceil((camera.x + canvas.width) / tileSize) + 1;

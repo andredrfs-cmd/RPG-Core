@@ -1,16 +1,20 @@
-const TILE_SIZE = 40;
-const MAP_COLUMNS = 30;
-const MAP_ROWS = 22;
+const LOGICAL_CELL_SIZE = 16;
+const RENDERED_TILE_SIZE = 32;
+const VIEW_COLUMNS = 20;
+const VIEW_ROWS = 20;
 
 const WORLD = {
-  width: MAP_COLUMNS * TILE_SIZE,
-  height: MAP_ROWS * TILE_SIZE,
-  tileSize: TILE_SIZE,
-  columns: MAP_COLUMNS,
-  rows: MAP_ROWS
+  width: VIEW_COLUMNS * RENDERED_TILE_SIZE,
+  height: VIEW_ROWS * RENDERED_TILE_SIZE,
+  tileSize: RENDERED_TILE_SIZE,
+  renderedTileSize: RENDERED_TILE_SIZE,
+  logicalCellSize: LOGICAL_CELL_SIZE,
+  columns: VIEW_COLUMNS,
+  rows: VIEW_ROWS
 };
 
-const PLAYER_SIZE = 30;
+const TILE_SIZE = RENDERED_TILE_SIZE;
+const PLAYER_SIZE = 24;
 const TICK_RATE = 20;
 const TICK_INTERVAL = 1000 / TICK_RATE;
 const PORT = Number(process.env.PORT) || 8080;
@@ -33,8 +37,10 @@ module.exports = {
   HOST,
   WORLD,
   TILE_SIZE,
-  MAP_COLUMNS,
-  MAP_ROWS,
+  LOGICAL_CELL_SIZE,
+  RENDERED_TILE_SIZE,
+  VIEW_COLUMNS,
+  VIEW_ROWS,
   PLAYER_SIZE,
   TICK_RATE,
   TICK_INTERVAL,

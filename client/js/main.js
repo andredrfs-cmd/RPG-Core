@@ -5,14 +5,25 @@ import { renderGame } from './renderer.js';
 
 const canvas = document.querySelector('#gameCanvas');
 const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
 const statusElement = document.querySelector('#status');
 const nameScreen = document.querySelector('#nameScreen');
 const nameForm = document.querySelector('#nameForm');
 const nameInput = document.querySelector('#nameInput');
 const nameError = document.querySelector('#nameError');
 const nameButton = nameForm.querySelector('button');
+const playerPanelName = document.querySelector('#playerPanelName');
+const playerHp = document.querySelector('#playerHp');
 
-const defaultWorld = { width: canvas.width, height: canvas.height, tileSize: 40, columns: 20, rows: 15 };
+const defaultWorld = {
+  width: canvas.width,
+  height: canvas.height,
+  tileSize: 32,
+  renderedTileSize: 32,
+  logicalCellSize: 16,
+  columns: 20,
+  rows: 20
+};
 let world = defaultWorld;
 let players = [];
 let localPlayerId = null;
@@ -26,6 +37,12 @@ function getLocalPlayer() {
 function setStatus(message, color) {
   statusElement.textContent = message;
   if (color) statusElement.style.color = color;
+}
+
+function updatePlayerPanel() {
+  const player = getLocalPlayer();
+  playerPanelName.textContent = player ? (player.name || player.id) : 'Aguardando entrada...';
+  if (player && player.stats) playerHp.textContent = `${player.stats.hp} / ${player.stats.maxHp}`;
 }
 
 function showNameScreen(suggestedName) {
@@ -57,14 +74,12 @@ const network = createNetwork({
       world = data.world || world;
       showNameScreen(data.suggestedName || data.id);
     }
-
     if (data.type === 'NAME_ERROR') {
       nameError.textContent = data.message;
       nameButton.disabled = false;
       nameInput.focus();
       nameInput.select();
     }
-
     if (data.type === 'NAME_ACCEPTED') {
       localPlayerId = data.id;
       localPlayerName = data.name;
@@ -72,10 +87,10 @@ const network = createNetwork({
       hideNameScreen();
       setStatus(`Conectado como ${localPlayerName} — jogadores: ${players.length}`);
     }
-
     if (data.type === 'TICK_UPDATE') {
       players = data.players;
       world = data.world || world;
+      updatePlayerPanel();
       if (hasEnteredWorld) setStatus(`Conectado como ${localPlayerName} — jogadores: ${players.length}`);
     }
   }
