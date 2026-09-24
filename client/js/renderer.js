@@ -1,10 +1,11 @@
 import { drawWorld } from './worldRenderer.js';
 
 export function renderGame(ctx, canvas, world, camera, players, localPlayerId) {
-  drawWorld(ctx, canvas, world, camera);
+  const localPlayer = players.find((player) => player.id === localPlayerId) || null;
+  drawWorld(ctx, canvas, world, camera, localPlayer);
 
   players.forEach((player) => {
-    const size = 30;
+    const size = 24;
     const screenX = player.x - camera.x;
     const screenY = player.y - camera.y;
     const left = screenX - size / 2;

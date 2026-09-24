@@ -1,16 +1,18 @@
 const LOGICAL_CELL_SIZE = 16;
 const RENDERED_TILE_SIZE = 32;
-const VIEW_COLUMNS = 20;
-const VIEW_ROWS = 20;
+const VIEW_COLUMNS = 32;
+const VIEW_ROWS = 32;
+const { createWorld } = require('../world/proceduralWorld');
 
 const WORLD = {
+  ...createWorld(),
   width: VIEW_COLUMNS * RENDERED_TILE_SIZE,
   height: VIEW_ROWS * RENDERED_TILE_SIZE,
+  columns: VIEW_COLUMNS,
+  rows: VIEW_ROWS,
   tileSize: RENDERED_TILE_SIZE,
   renderedTileSize: RENDERED_TILE_SIZE,
-  logicalCellSize: LOGICAL_CELL_SIZE,
-  columns: VIEW_COLUMNS,
-  rows: VIEW_ROWS
+  logicalCellSize: LOGICAL_CELL_SIZE
 };
 
 const TILE_SIZE = RENDERED_TILE_SIZE;
