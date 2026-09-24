@@ -86,6 +86,35 @@ function isNameTaken(name, currentPlayer) {
   ));
 }
 
+function isWalkableAt(x, y) {
+  const half = PLAYER_SIZE / 2;
+  const left = x - half;
+  const right = x + half;
+  const top = y - half;
+  const bottom = y + half;
+
+  return (
+    left >= TILE_SIZE &&
+    right <= WORLD.width - TILE_SIZE &&
+    top >= TILE_SIZE &&
+    bottom <= WORLD.height - TILE_SIZE
+  );
+}
+
+function tryMove(player, deltaX, deltaY) {
+  const nextX = player.x + deltaX;
+  const nextY = player.y + deltaY;
+
+  // Testa cada eixo separadamente para permitir deslizar pela margem da água.
+  if (isWalkableAt(nextX, player.y)) {
+    player.x = nextX;
+  }
+
+  if (isWalkableAt(player.x, nextY)) {
+    player.y = nextY;
+  }
+}
+
 function updatePlayer(player) {
   if (!player.ready) return;
 
@@ -101,12 +130,9 @@ function updatePlayer(player) {
   else if (vertical < 0) player.direction = 'up';
 
   const length = Math.hypot(horizontal, vertical) || 1;
-  player.x += (horizontal / length) * player.speed;
-  player.y += (vertical / length) * player.speed;
-
-  const half = PLAYER_SIZE / 2;
-  player.x = Math.max(half, Math.min(WORLD.width - half, player.x));
-  player.y = Math.max(half, Math.min(WORLD.height - half, player.y));
+  const deltaX = (horizontal / length) * player.speed;
+  const deltaY = (vertical / length) * player.speed;
+  tryMove(player, deltaX, deltaY);
 }
 
 function serializePlayers() {

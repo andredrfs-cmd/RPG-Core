@@ -14,6 +14,8 @@ A primeira versão possui:
 - movimento diagonal normalizado;
 - mundo inicial de 20x15 blocos, com blocos de 40x40 pixels;
 - borda de água e área interna de grama;
+- colisão autoritativa com a água no servidor;
+- movimento separado por eixo para deslizar nas margens;
 - bloco de debug definido para áreas fora do mapa;
 - identificação visual do jogador local;
 - cliente servido pelo próprio servidor Node.js;
@@ -22,7 +24,7 @@ A primeira versão possui:
 - nomes duplicados bloqueados sem usar banco de dados;
 - configuração adequada para execução local e no GitHub Codespaces.
 
-Neste momento, a água é apenas visual. A colisão com a água será implementada na próxima etapa. A movimentação continua limitada ao retângulo do mundo, como antes.
+A colisão considera o tamanho do jogador. O jogador precisa permanecer completamente dentro da área interna de grama; a água da borda não é atravessável.
 
 ## Estrutura
 
@@ -75,13 +77,17 @@ O cliente escolhe automaticamente `ws://` localmente e `wss://` quando a página
 
 ## Blocos atuais
 
-| Bloco | Aparência | Regra atual |
+| Bloco | Aparência | Regra |
 |---|---|---|
-| Grama | verde | área interna do mapa |
-| Água | azul | borda do mapa; ainda sem colisão |
+| Grama | verde | área caminhável interna do mapa |
+| Água | azul | borda bloqueada pelo servidor |
 | Debug | magenta | áreas fora do mapa, usadas apenas como fallback visual |
 
 Como o canvas continua exatamente com 800x600 pixels e o mundo possui 20x15 blocos de 40 pixels, toda a tela é preenchida pelo mapa. Por isso, o bloco de debug não deve aparecer normalmente.
+
+## Colisão
+
+A colisão é calculada no servidor. O servidor testa a posição futura do jogador considerando metade do tamanho do personagem. Os eixos horizontal e vertical são testados separadamente, permitindo que o jogador deslize pela margem da água quando tenta se mover na diagonal.
 
 ## Regras de nome
 
@@ -93,7 +99,6 @@ Como o canvas continua exatamente com 800x600 pixels e o mundo possui 20x15 bloc
 
 ## Roadmap
 
-- [ ] colisão com água;
 - [ ] câmera seguindo o jogador local;
 - [ ] mapa maior que a tela;
 - [ ] interpolação de movimento no cliente;
