@@ -102,12 +102,23 @@
     const nameError = document.querySelector('#nameError');
     const nameButton = nameForm.querySelector('button');
     const inputs = { up: false, down: false, left: false, right: false };
+    const TILE = {
+      grass: { color: '#4f8f45', line: '#42783a' },
+      water: { color: '#2876b8', line: '#23669f' },
+      debug: { color: '#ff00ff', line: '#ff8cff' }
+    };
     let socket;
     let myPlayerId = null;
     let myPlayerName = null;
     let hasEnteredWorld = false;
     let players = [];
-    let world = { width: canvas.width, height: canvas.height };
+    let world = {
+      width: canvas.width,
+      height: canvas.height,
+      tileSize: 40,
+      columns: 20,
+      rows: 15
+    };
 
     function showNameScreen(suggestedName) {
       nameInput.value = suggestedName || '';
@@ -217,18 +228,46 @@
       sendInputs();
     });
 
-    function render() {
-      ctx.fillStyle = '#080a0f';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function getTileType(column, row) {
+      if (column < 0 || row < 0 || column >= world.columns || row >= world.rows) {
+        return 'debug';
+      }
 
-      ctx.strokeStyle = '#171c27';
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= world.width; x += 40) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, world.height); ctx.stroke();
+      const isBorder = (
+        column === 0 ||
+        row === 0 ||
+        column === world.columns - 1 ||
+        row === world.rows - 1
+      );
+
+      return isBorder ? 'water' : 'grass';
+    }
+
+    function drawWorld() {
+      const tileSize = world.tileSize;
+      const visibleColumns = Math.ceil(canvas.width / tileSize);
+      const visibleRows = Math.ceil(canvas.height / tileSize);
+
+      for (let row = -1; row <= visibleRows; row += 1) {
+        for (let column = -1; column <= visibleColumns; column += 1) {
+          const type = getTileType(column, row);
+          const tile = TILE[type];
+          const x = column * tileSize;
+          const y = row * tileSize;
+
+          ctx.fillStyle = tile.color;
+          ctx.fillRect(x, y, tileSize, tileSize);
+          ctx.strokeStyle = tile.line;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, tileSize - 1, tileSize - 1);
+        }
       }
-      for (let y = 0; y <= world.height; y += 40) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(world.width, y); ctx.stroke();
-      }
+    }
+
+    function render() {
+      ctx.fillStyle = TILE.debug.color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawWorld();
 
       players.forEach((player) => {
         const size = 30;

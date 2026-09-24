@@ -12,7 +12,9 @@ A primeira versão possui:
 - loop de jogo a 20 ticks por segundo;
 - movimento com WASD e setas;
 - movimento diagonal normalizado;
-- limite do mundo de 800x600;
+- mundo inicial de 20x15 blocos, com blocos de 40x40 pixels;
+- borda de água e área interna de grama;
+- bloco de debug definido para áreas fora do mapa;
 - identificação visual do jogador local;
 - cliente servido pelo próprio servidor Node.js;
 - tela de entrada para escolher o nome do jogador;
@@ -20,7 +22,7 @@ A primeira versão possui:
 - nomes duplicados bloqueados sem usar banco de dados;
 - configuração adequada para execução local e no GitHub Codespaces.
 
-O nome dos jogadores fica apenas na memória do servidor e é perdido quando o servidor reinicia.
+Neste momento, a água é apenas visual. A colisão com a água será implementada na próxima etapa. A movimentação continua limitada ao retângulo do mundo, como antes.
 
 ## Estrutura
 
@@ -51,7 +53,7 @@ Depois abra no navegador:
 http://localhost:8080
 ```
 
-Ao conectar, informe um nome. O nome sugerido será o ID gerado pelo servidor, por exemplo `player_1`. Abra o endereço em duas abas e tente usar o mesmo nome para verificar a validação de duplicidade.
+Ao conectar, informe um nome. O nome sugerido será o ID gerado pelo servidor, por exemplo `player_1`. Abra o endereço em duas abas para testar dois jogadores.
 
 ## Executar no GitHub Codespaces
 
@@ -71,6 +73,16 @@ npm start
 
 O cliente escolhe automaticamente `ws://` localmente e `wss://` quando a página é aberta com HTTPS. O servidor também usa `process.env.PORT`, permitindo que ambientes de hospedagem escolham a porta automaticamente.
 
+## Blocos atuais
+
+| Bloco | Aparência | Regra atual |
+|---|---|---|
+| Grama | verde | área interna do mapa |
+| Água | azul | borda do mapa; ainda sem colisão |
+| Debug | magenta | áreas fora do mapa, usadas apenas como fallback visual |
+
+Como o canvas continua exatamente com 800x600 pixels e o mundo possui 20x15 blocos de 40 pixels, toda a tela é preenchida pelo mapa. Por isso, o bloco de debug não deve aparecer normalmente.
+
 ## Regras de nome
 
 - entre 3 e 16 caracteres;
@@ -81,9 +93,9 @@ O cliente escolhe automaticamente `ws://` localmente e `wss://` quando a página
 
 ## Roadmap
 
-- [ ] mapa baseado em blocos;
-- [ ] terreno caminhável e água com colisão;
+- [ ] colisão com água;
 - [ ] câmera seguindo o jogador local;
+- [ ] mapa maior que a tela;
 - [ ] interpolação de movimento no cliente;
 - [ ] sprites e animações por direção;
 - [ ] controles touch para mobile;

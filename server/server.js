@@ -5,7 +5,16 @@ const { WebSocketServer, WebSocket } = require('ws');
 
 const PORT = Number(process.env.PORT) || 8080;
 const HOST = '0.0.0.0';
-const WORLD = { width: 800, height: 600 };
+const TILE_SIZE = 40;
+const MAP_COLUMNS = 20;
+const MAP_ROWS = 15;
+const WORLD = {
+  width: MAP_COLUMNS * TILE_SIZE,
+  height: MAP_ROWS * TILE_SIZE,
+  tileSize: TILE_SIZE,
+  columns: MAP_COLUMNS,
+  rows: MAP_ROWS
+};
 const PLAYER_SIZE = 30;
 const TICK_RATE = 20;
 const TICK_INTERVAL = 1000 / TICK_RATE;
@@ -191,10 +200,7 @@ wss.on('connection', (socket) => {
         const result = validateName(message.name);
 
         if (!result.valid) {
-          socket.send(JSON.stringify({
-            type: 'NAME_ERROR',
-            message: result.message
-          }));
+          socket.send(JSON.stringify({ type: 'NAME_ERROR', message: result.message }));
           return;
         }
 
@@ -244,5 +250,6 @@ setInterval(() => {
 
 httpServer.listen(PORT, HOST, () => {
   console.log(`🚀 RPG-Core disponível em http://localhost:${PORT}`);
+  console.log(`🗺️ Mundo: ${MAP_COLUMNS}x${MAP_ROWS} blocos de ${TILE_SIZE}px`);
   console.log(`🎮 Tick rate: ${TICK_RATE} ticks/segundo`);
 });
