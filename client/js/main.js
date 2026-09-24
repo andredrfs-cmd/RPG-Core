@@ -14,6 +14,13 @@ const nameError = document.querySelector('#nameError');
 const nameButton = nameForm.querySelector('button');
 const playerPanelName = document.querySelector('#playerPanelName');
 const playerHp = document.querySelector('#playerHp');
+const locationFields = {
+  world: document.querySelector('#locationWorld'),
+  layer: document.querySelector('#locationLayer'),
+  region: document.querySelector('#locationRegion'),
+  chunk: document.querySelector('#locationChunk'),
+  position: document.querySelector('#locationPosition')
+};
 
 const defaultWorld = {
   width: canvas.width,
@@ -39,10 +46,31 @@ function setStatus(message, color) {
   if (color) statusElement.style.color = color;
 }
 
+function formatCoordinate(value) {
+  return Number.isFinite(value) ? String(Math.round(value * 100) / 100) : '—';
+}
+
+function formatTriple(value) {
+  if (!value || !Number.isFinite(value.x) || !Number.isFinite(value.z)) return '—';
+  return `(${formatCoordinate(value.x)}, ${formatCoordinate(value.y || 0)}, ${formatCoordinate(value.z)})`;
+}
+
+function updateLocationPanel(player) {
+  const location = player?.location;
+  locationFields.world.textContent = location?.worldId || '—';
+  locationFields.layer.textContent = location?.layerId || '—';
+  locationFields.region.textContent = formatTriple(location?.region);
+  locationFields.chunk.textContent = location?.chunk
+    ? `(${formatCoordinate(location.chunk.x)}, ${formatCoordinate(location.chunk.z)})`
+    : '—';
+  locationFields.position.textContent = formatTriple(location?.position);
+}
+
 function updatePlayerPanel() {
   const player = getLocalPlayer();
   playerPanelName.textContent = player ? (player.name || player.id) : 'Aguardando entrada...';
   if (player && player.stats) playerHp.textContent = `${player.stats.hp} / ${player.stats.maxHp}`;
+  updateLocationPanel(player);
 }
 
 function showNameScreen(suggestedName) {

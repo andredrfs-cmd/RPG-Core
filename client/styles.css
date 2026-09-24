@@ -43,6 +43,10 @@ canvas {
 .panel-card p { margin: 0; color: #aab4c4; }
 .stat-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; color: #aab4c4; }
 .stat-row strong { color: #fff; }
+.location-list { display: grid; gap: 8px; margin: 0; font-size: .85rem; }
+.location-list div { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: baseline; }
+.location-list dt { color: #8f9bb0; }
+.location-list dd { margin: 0; color: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; overflow-wrap: anywhere; }
 .panel-placeholder { font-size: .9rem; line-height: 1.4; }
 #nameScreen {
   position: fixed;
