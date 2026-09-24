@@ -1,6 +1,8 @@
 const TILE_STYLES = {
   grass: { color: '#4f8f45', line: '#42783a' },
   water: { color: '#2876b8', line: '#23669f' },
+  deep_water: { color: '#123c73', line: '#0e315e' },
+  stone: { color: '#777b82', line: '#62666d' },
   debug: { color: '#ff00ff', line: '#ff8cff' }
 };
 
@@ -22,7 +24,7 @@ export function drawWorld(ctx, canvas, world, camera) {
 
   for (let row = firstRow; row <= lastRow; row += 1) {
     for (let column = firstColumn; column <= lastColumn; column += 1) {
-      const tile = TILE_STYLES[getTileType(column, row, world)];
+      const tile = TILE_STYLES[getTileType(column, row, world)] || TILE_STYLES.debug;
       const x = column * tileSize - camera.x;
       const y = row * tileSize - camera.y;
       ctx.fillStyle = tile.color;
