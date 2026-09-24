@@ -10,6 +10,9 @@ const PLAYER_SIZE = 30;
 const TICK_RATE = 20;
 const TICK_INTERVAL = 1000 / TICK_RATE;
 const COLORS = ['#00ff00', '#ff4d4d', '#00d9ff', '#ffe14d', '#ff66e8', '#ffffff'];
+const NAME_MIN_LENGTH = 3;
+const NAME_MAX_LENGTH = 16;
+const NAME_PATTERN = /^[\p{L}\p{N}_ -]+$/u;
 
 const players = new Map();
 let nextPlayerId = 1;
@@ -19,6 +22,8 @@ function createPlayer(socket) {
   const id = `player_${nextPlayerId++}`;
   return {
     id,
+    name: null,
+    ready: false,
     x: Math.round(WORLD.width / 2),
     y: Math.round(WORLD.height / 2),
     speed: 5,
@@ -40,7 +45,41 @@ function parseInputs(value) {
   };
 }
 
+function validateName(value) {
+  if (typeof value !== 'string') {
+    return { valid: false, message: 'Digite um nome válido.' };
+  }
+
+  const name = value.trim().replace(/\s+/g, ' ');
+
+  if (name.length < NAME_MIN_LENGTH) {
+    return { valid: false, message: `O nome precisa ter pelo menos ${NAME_MIN_LENGTH} caracteres.` };
+  }
+
+  if (name.length > NAME_MAX_LENGTH) {
+    return { valid: false, message: `O nome pode ter no máximo ${NAME_MAX_LENGTH} caracteres.` };
+  }
+
+  if (!NAME_PATTERN.test(name)) {
+    return { valid: false, message: 'Use apenas letras, números, espaços, hífen ou sublinhado.' };
+  }
+
+  return { valid: true, name };
+}
+
+function isNameTaken(name, currentPlayer) {
+  const normalizedName = name.toLocaleLowerCase();
+
+  return Array.from(players.values()).some((player) => (
+    player !== currentPlayer &&
+    player.name &&
+    player.name.toLocaleLowerCase() === normalizedName
+  ));
+}
+
 function updatePlayer(player) {
+  if (!player.ready) return;
+
   const { inputs } = player;
   const horizontal = Number(inputs.right) - Number(inputs.left);
   const vertical = Number(inputs.down) - Number(inputs.up);
@@ -52,7 +91,6 @@ function updatePlayer(player) {
   else if (vertical > 0) player.direction = 'down';
   else if (vertical < 0) player.direction = 'up';
 
-  // Normaliza a diagonal para que ela não seja mais rápida que o movimento reto.
   const length = Math.hypot(horizontal, vertical) || 1;
   player.x += (horizontal / length) * player.speed;
   player.y += (vertical / length) * player.speed;
@@ -63,14 +101,17 @@ function updatePlayer(player) {
 }
 
 function serializePlayers() {
-  return Array.from(players.values()).map((player) => ({
-    id: player.id,
-    x: Math.round(player.x * 100) / 100,
-    y: Math.round(player.y * 100) / 100,
-    color: player.color,
-    direction: player.direction,
-    isMoving: player.isMoving
-  }));
+  return Array.from(players.values())
+    .filter((player) => player.ready)
+    .map((player) => ({
+      id: player.id,
+      name: player.name,
+      x: Math.round(player.x * 100) / 100,
+      y: Math.round(player.y * 100) / 100,
+      color: player.color,
+      direction: player.direction,
+      isMoving: player.isMoving
+    }));
 }
 
 function broadcastState() {
@@ -138,16 +179,48 @@ wss.on('connection', (socket) => {
   socket.send(JSON.stringify({
     type: 'INIT',
     id: player.id,
+    suggestedName: player.id,
     world: WORLD
   }));
 
   socket.on('message', (rawMessage) => {
     try {
       const message = JSON.parse(rawMessage.toString());
-      if (message.type !== 'INPUT') return;
 
-      const inputs = parseInputs(message.inputs);
-      if (inputs) player.inputs = inputs;
+      if (message.type === 'SET_NAME') {
+        const result = validateName(message.name);
+
+        if (!result.valid) {
+          socket.send(JSON.stringify({
+            type: 'NAME_ERROR',
+            message: result.message
+          }));
+          return;
+        }
+
+        if (isNameTaken(result.name, player)) {
+          socket.send(JSON.stringify({
+            type: 'NAME_ERROR',
+            message: 'Esse nome já está em uso. Escolha outro.'
+          }));
+          return;
+        }
+
+        player.name = result.name;
+        player.ready = true;
+        socket.send(JSON.stringify({
+          type: 'NAME_ACCEPTED',
+          id: player.id,
+          name: player.name
+        }));
+        console.log(`✅ ${player.id} entrou como "${player.name}".`);
+        return;
+      }
+
+      if (message.type === 'INPUT' && player.ready) {
+        const inputs = parseInputs(message.inputs);
+        if (inputs) player.inputs = inputs;
+      }
     } catch (error) {
       console.warn('Mensagem inválida recebida:', error.message);
     }

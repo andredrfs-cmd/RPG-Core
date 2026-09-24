@@ -28,9 +28,62 @@
       image-rendering: pixelated;
     }
     .help { color: #aab4c4; font-size: .9rem; }
+    #nameScreen {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(8, 10, 15, .88);
+      z-index: 2;
+    }
+    #nameCard {
+      width: min(100%, 380px);
+      padding: 28px;
+      border: 1px solid #344054;
+      border-radius: 12px;
+      background: #171c27;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+    }
+    #nameCard h2 { margin-top: 0; }
+    #nameForm { display: flex; gap: 8px; }
+    #nameInput {
+      min-width: 0;
+      flex: 1;
+      padding: 11px;
+      border: 1px solid #52617a;
+      border-radius: 6px;
+      background: #0f131b;
+      color: #fff;
+      font: inherit;
+    }
+    #nameForm button {
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 6px;
+      background: #3b82f6;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    #nameForm button:disabled { opacity: .55; cursor: wait; }
+    #nameError { min-height: 1.4em; margin-bottom: 0; color: #ff8787; }
   </style>
 </head>
 <body>
+  <div id="nameScreen" hidden>
+    <section id="nameCard" aria-labelledby="nameTitle">
+      <h2 id="nameTitle">Entrar no RPG-Core</h2>
+      <p>Escolha o nome que aparecerá para os outros jogadores.</p>
+      <form id="nameForm">
+        <label for="nameInput" hidden>Nome do jogador</label>
+        <input id="nameInput" name="name" type="text" maxlength="16" autocomplete="nickname" required>
+        <button type="submit">Entrar</button>
+      </form>
+      <p id="nameError" role="alert"></p>
+    </section>
+  </div>
+
   <main>
     <h1>RPG-Core</h1>
     <p id="status">Conectando ao servidor...</p>
@@ -42,9 +95,16 @@
     const canvas = document.querySelector('#gameCanvas');
     const ctx = canvas.getContext('2d');
     const statusElement = document.querySelector('#status');
+    const nameScreen = document.querySelector('#nameScreen');
+    const nameForm = document.querySelector('#nameForm');
+    const nameInput = document.querySelector('#nameInput');
+    const nameError = document.querySelector('#nameError');
+    const nameButton = nameForm.querySelector('button');
     const inputs = { up: false, down: false, left: false, right: false };
     let socket;
     let myPlayerId = null;
+    let myPlayerName = null;
+    let hasEnteredWorld = false;
     let players = [];
     let world = { width: canvas.width, height: canvas.height };
 
@@ -53,23 +113,49 @@
       socket = new WebSocket(`${protocol}//${window.location.host}`);
 
       socket.addEventListener('open', () => {
-        statusElement.textContent = 'Conectado — jogadores: 0';
+        statusElement.textContent = 'Conectado — escolha um nome para entrar';
         statusElement.style.color = '#63e6be';
       });
 
       socket.addEventListener('message', (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === 'INIT') myPlayerId = data.id;
+
+        if (data.type === 'INIT') {
+          myPlayerId = data.id;
+          world = data.world || world;
+          nameInput.value = data.suggestedName || data.id;
+          nameScreen.hidden = false;
+          nameInput.focus();
+        }
+
+        if (data.type === 'NAME_ERROR') {
+          nameError.textContent = data.message;
+          nameButton.disabled = false;
+          nameInput.focus();
+          nameInput.select();
+        }
+
+        if (data.type === 'NAME_ACCEPTED') {
+          myPlayerId = data.id;
+          myPlayerName = data.name;
+          hasEnteredWorld = true;
+          nameScreen.hidden = true;
+          statusElement.textContent = `Conectado como ${myPlayerName} — jogadores: ${players.length}`;
+        }
+
         if (data.type === 'TICK_UPDATE') {
           players = data.players;
           world = data.world || world;
-          statusElement.textContent = `Conectado — jogadores: ${players.length}`;
+          if (hasEnteredWorld) {
+            statusElement.textContent = `Conectado como ${myPlayerName} — jogadores: ${players.length}`;
+          }
         }
       });
 
       socket.addEventListener('close', () => {
         statusElement.textContent = 'Desconectado do servidor';
         statusElement.style.color = '#ff8787';
+        nameButton.disabled = true;
       });
 
       socket.addEventListener('error', () => {
@@ -78,8 +164,18 @@
       });
     }
 
+    nameForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = nameInput.value.trim();
+      if (!name || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      nameError.textContent = '';
+      nameButton.disabled = true;
+      socket.send(JSON.stringify({ type: 'SET_NAME', name }));
+    });
+
     function sendInputs() {
-      if (socket && socket.readyState === WebSocket.OPEN) {
+      if (socket && socket.readyState === WebSocket.OPEN && hasEnteredWorld) {
         socket.send(JSON.stringify({ type: 'INPUT', inputs }));
       }
     }
@@ -137,7 +233,7 @@
         ctx.fillStyle = '#fff';
         ctx.font = '12px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(player.id, player.x, top - 8);
+        ctx.fillText(player.name || player.id, player.x, top - 8);
       });
 
       requestAnimationFrame(render);

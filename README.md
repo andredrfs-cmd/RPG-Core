@@ -4,7 +4,7 @@ Protótipo de um RPG 2D multiplayer para navegador. O projeto usa Node.js, WebSo
 
 ## Estado atual
 
-A primeira versão já possui:
+A primeira versão possui:
 
 - servidor Node.js com WebSocket;
 - múltiplos jogadores simultâneos;
@@ -15,7 +15,12 @@ A primeira versão já possui:
 - limite do mundo de 800x600;
 - identificação visual do jogador local;
 - cliente servido pelo próprio servidor Node.js;
+- tela de entrada para escolher o nome do jogador;
+- validação de nomes no servidor;
+- nomes duplicados bloqueados sem usar banco de dados;
 - configuração adequada para execução local e no GitHub Codespaces.
+
+O nome dos jogadores fica apenas na memória do servidor e é perdido quando o servidor reinicia.
 
 ## Estrutura
 
@@ -46,7 +51,7 @@ Depois abra no navegador:
 http://localhost:8080
 ```
 
-Abra o endereço em duas abas para testar dois jogadores. O diretório `node_modules/` é criado pelo `npm install` e não deve ser enviado ao GitHub.
+Ao conectar, informe um nome. O nome sugerido será o ID gerado pelo servidor, por exemplo `player_1`. Abra o endereço em duas abas e tente usar o mesmo nome para verificar a validação de duplicidade.
 
 ## Executar no GitHub Codespaces
 
@@ -66,23 +71,23 @@ npm start
 
 O cliente escolhe automaticamente `ws://` localmente e `wss://` quando a página é aberta com HTTPS. O servidor também usa `process.env.PORT`, permitindo que ambientes de hospedagem escolham a porta automaticamente.
 
-## Variáveis e portas
+## Regras de nome
 
-A porta padrão é `8080`, mas pode ser substituída pelo ambiente:
-
-```bash
-PORT=3000 npm start
-```
-
-O servidor escuta em `0.0.0.0`, necessário para encaminhamento de portas em ambientes remotos.
+- entre 3 e 16 caracteres;
+- letras, números, espaços, hífen e sublinhado;
+- espaços repetidos são normalizados;
+- nomes são comparados sem diferenciar maiúsculas de minúsculas;
+- dois jogadores não podem usar o mesmo nome simultaneamente.
 
 ## Roadmap
 
+- [ ] mapa baseado em blocos;
+- [ ] terreno caminhável e água com colisão;
+- [ ] câmera seguindo o jogador local;
 - [ ] interpolação de movimento no cliente;
 - [ ] sprites e animações por direção;
-- [ ] nomes personalizados;
-- [ ] câmera dinâmica;
-- [ ] mapas maiores;
+- [ ] controles touch para mobile;
+- [ ] nomes persistentes com autenticação ou banco de dados, se necessário;
 - [ ] salas e mapas separados;
 - [ ] testes automatizados.
 
