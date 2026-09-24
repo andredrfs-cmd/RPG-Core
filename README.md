@@ -4,30 +4,47 @@ Protótipo de um RPG 2D multiplayer para navegador, com Node.js, WebSocket e HTM
 
 ## Estado atual
 
-- múltiplos jogadores simultâneos;
-- nomes validados no servidor, sem banco de dados;
-- viewport quadrado de 20x20 células renderizadas em 32x32 pixels (640x640);
+- viewport quadrado de 20x20 células renderizadas em 32x32 pixels;
 - célula lógica configurada em 16 unidades, separada do tamanho visual;
-- câmera seguindo o jogador local;
-- células registradas: grama, água, mar profundo, pedra e debug;
-- grama caminhável e borda de água bloqueada;
+- modelo inicial de localização com `worldId`, `layerId`, `region`, `chunk` e `position`;
+- regiões verticais usam `region.y` para superfície, subsolo ou níveis superiores;
+- chunks são horizontais e usam somente `chunk.x` e `chunk.z`;
+- `position.y` fica reservado para altura local, voo e empilhamento;
+- múltiplos jogadores simultâneos;
 - servidor autoritativo para movimento e colisão;
-- cliente dividido em rede, input, câmera, mundo, renderização e interface lateral;
-- execução local e no GitHub Codespaces.
+- células registradas: grama, água, mar profundo, pedra e debug.
 
-## Configuração visual e lógica
+## Modelo de coordenadas
 
-```text
-logicalCellSize: 16       # unidade lógica futura do mundo
-renderedTileSize: 32      # tamanho visual de uma célula no Canvas
-viewport: 20x20           # 640x640 pixels
+```javascript
+{
+  worldId: 'overworld',
+  layerId: 'surface',
+  region: { x: 0, y: 0, z: 0 },
+  chunk: { x: 0, z: 0 },
+  position: { x: 12, y: 0, z: 8 }
+}
 ```
 
-A configuração está em `server/config/gameConfig.js` e é enviada junto com o estado inicial do mundo. O cliente usa o valor recebido para renderização.
+Convenções:
+
+- `x` e `z` formam o plano horizontal do mundo;
+- `region.y` identifica o nível vertical da região;
+- `position.y` identifica a altura local da entidade ou célula;
+- `chunk` organiza uma área horizontal e não possui `y`;
+- `layerId` representa um espaço próprio, como `surface`, `castelo_1` ou `dungeon_1`.
+
+Configuração atual:
+
+```text
+1 chunk       = 16x16 células horizontais
+1 região      = 16x16 chunks
+1 região      = 256x256 células horizontais
+```
+
+As funções de coordenadas estão em `server/coordinates/worldCoordinates.js`. A localização já faz parte do estado do jogador, enquanto a movimentação visual antiga continua temporariamente para permitir uma migração segura.
 
 ## Executar localmente
-
-Você precisa ter o [Node.js](https://nodejs.org/) instalado.
 
 ```bash
 cd server
@@ -35,16 +52,15 @@ npm install
 npm start
 ```
 
-Depois abra `http://localhost:8080`. Informe um nome e abra o endereço em duas abas para testar o multiplayer.
+Depois abra `http://localhost:8080`.
 
 ## Roadmap
 
-- [ ] formalização de coordenadas world/layer/region/chunk/cell;
-- [ ] geração procedural e chunks;
+- [ ] migrar movimento para `player.location.position`;
+- [ ] gerar e armazenar chunks;
+- [ ] consultar células reais na colisão;
+- [ ] enviar apenas chunks visíveis;
 - [ ] inventário e interface funcional;
-- [ ] interpolação de movimento;
-- [ ] sprites e animações;
-- [ ] controles touch;
-- [ ] mobs e NPCs;
-- [ ] testes automatizados;
-- [ ] sistema de mods/datapacks.
+- [ ] interiores e transições entre layers;
+- [ ] voo, subsolo e regras de altura;
+- [ ] persistência e sistema de mods/datapacks.

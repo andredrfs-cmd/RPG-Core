@@ -1,0 +1,16 @@
+const CHUNK_CELL_SIZE = 16;
+const REGION_CHUNK_SIZE = 16;
+const REGION_CELL_SIZE = CHUNK_CELL_SIZE * REGION_CHUNK_SIZE;
+
+const WORLD_LAYOUT = {
+  chunkCellSize: CHUNK_CELL_SIZE,
+  regionChunkSize: REGION_CHUNK_SIZE,
+  regionCellSize: REGION_CELL_SIZE
+};
+
+module.exports = {
+  CHUNK_CELL_SIZE,
+  REGION_CHUNK_SIZE,
+  REGION_CELL_SIZE,
+  WORLD_LAYOUT
+};
