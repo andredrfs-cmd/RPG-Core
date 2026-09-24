@@ -2,7 +2,7 @@ const {
   CHUNK_CELL_SIZE,
   REGION_CHUNK_SIZE,
   REGION_CELL_SIZE
-} = require('./worldConfig');
+} = require('../config/worldConfig');
 const { getCell } = require('../cells/cellRegistry');
 
 const REGION_SEED = 18473;
@@ -65,7 +65,7 @@ function createWorld({ seed = REGION_SEED, regionX = 0, regionY = 0, regionZ = 0
     regionChunkSize: REGION_CHUNK_SIZE,
     viewDistanceChunks: 1,
     cells: generatedRegion.cells,
-    cellsByKey: undefined,
+    cellsByKey,
     cellDefinitions: [getCell('grass'), getCell('stone'), getCell('debug')]
   };
 }
