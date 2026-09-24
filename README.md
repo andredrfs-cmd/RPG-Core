@@ -1,45 +1,41 @@
 # RPG-Core
 
-Protótipo de um RPG 2D multiplayer para navegador. O projeto usa Node.js, WebSocket e HTML5 Canvas, com o servidor responsável por calcular as posições dos jogadores.
+Protótipo de um RPG 2D multiplayer para navegador, com Node.js, WebSocket e HTML5 Canvas. O servidor é autoritativo: o cliente envia intenções de movimento e recebe o estado válido do mundo.
 
 ## Estado atual
 
-A primeira versão possui:
-
-- servidor Node.js com WebSocket;
 - múltiplos jogadores simultâneos;
-- servidor autoritativo para movimento;
-- loop de jogo a 20 ticks por segundo;
-- movimento com WASD e setas;
-- movimento diagonal normalizado;
-- mundo de 30x22 blocos, com blocos de 40x40 pixels;
-- tela de 800x600 pixels;
-- câmera seguindo e centralizando o jogador local;
-- câmera limitada às bordas do mundo;
-- borda de água e área interna de grama;
-- colisão autoritativa com a água no servidor;
-- movimento separado por eixo para deslizar nas margens;
-- bloco de debug definido para áreas fora do mapa;
-- identificação visual do jogador local;
-- cliente servido pelo próprio servidor Node.js;
-- tela de entrada para escolher o nome do jogador;
-- validação de nomes no servidor;
-- nomes duplicados bloqueados sem usar banco de dados;
-- configuração adequada para execução local e no GitHub Codespaces.
+- nomes validados no servidor, sem banco de dados;
+- mundo de 30x22 blocos de 40x40 pixels;
+- câmera seguindo o jogador local;
+- grama caminhável e borda de água bloqueada;
+- servidor autoritativo para movimento e colisão;
+- regras, sistemas e entidade de jogador separados no servidor;
+- cliente dividido em rede, input, câmera, mundo e renderização;
+- execução local e no GitHub Codespaces.
 
-A colisão considera o tamanho do jogador. O jogador precisa permanecer completamente dentro da área interna de grama; a água da borda não é atravessável. A câmera é calculada apenas no cliente e não altera a posição real do jogador no servidor.
-
-## Estrutura
+## Organização do código
 
 ```text
-RPG-Core/
-├── client/
-│   └── index.html
-├── server/
-│   ├── .gitignore
-│   ├── package.json
-│   └── server.js
-└── README.md
+server/
+├── server.js                 # ponto de entrada e loop do jogo
+├── config/                   # valores padrão do servidor e do mundo
+├── entities/                 # estado das entidades do jogo
+├── rules/                    # regras reutilizáveis por domínio
+├── systems/                  # coordenação das regras
+├── network/                  # WebSocket e mensagens
+└── web/                      # servidor de arquivos do cliente
+
+client/
+├── index.html                # estrutura da página
+├── styles.css                # aparência da página
+└── js/
+    ├── main.js               # inicialização e coordenação
+    ├── network.js            # conexão WebSocket
+    ├── input.js              # teclado e envio de input
+    ├── camera.js             # câmera do jogador local
+    ├── worldRenderer.js      # desenho dos blocos
+    └── renderer.js           # desenho do mundo e entidades
 ```
 
 ## Executar localmente
@@ -52,19 +48,12 @@ npm install
 npm start
 ```
 
-Depois abra no navegador:
-
-```text
-http://localhost:8080
-```
-
-Ao conectar, informe um nome. O nome sugerido será o ID gerado pelo servidor, por exemplo `player_1`. Abra o endereço em duas abas para testar dois jogadores.
+Depois abra `http://localhost:8080`. Informe um nome e abra o endereço em duas abas para testar o multiplayer.
 
 ## Executar no GitHub Codespaces
 
-1. Abra o repositório no GitHub.
-2. Selecione **Code → Codespaces → Create codespace on main**.
-3. No terminal do Codespace, execute:
+1. Abra **Code → Codespaces → Create codespace on main**.
+2. No terminal, execute:
 
 ```bash
 cd server
@@ -72,44 +61,21 @@ npm install
 npm start
 ```
 
-4. Abra a aba **Ports**.
-5. Localize a porta `8080` e abra o endereço encaminhado.
-6. Para testar com outra pessoa, torne a porta pública apenas durante o teste.
-
-O cliente escolhe automaticamente `ws://` localmente e `wss://` quando a página é aberta com HTTPS. O servidor também usa `process.env.PORT`, permitindo que ambientes de hospedagem escolham a porta automaticamente.
-
-## Blocos atuais
-
-| Bloco | Aparência | Regra |
-|---|---|---|
-| Grama | verde | área caminhável interna do mapa |
-| Água | azul | borda bloqueada pelo servidor |
-| Debug | magenta | áreas fora do mapa, usadas apenas como fallback visual |
-
-O mundo agora é maior que o canvas. A câmera mostra apenas uma parte do mapa, acompanha o jogador local e para nas bordas para não exibir uma área inexistente. O bloco de debug só aparece se a câmera ou algum objeto tentar acessar coordenadas fora do mapa.
-
-## Colisão
-
-A colisão é calculada no servidor. O servidor testa a posição futura do jogador considerando metade do tamanho do personagem. Os eixos horizontal e vertical são testados separadamente, permitindo que o jogador deslize pela margem da água.
-
-## Regras de nome
-
-- entre 3 e 16 caracteres;
-- letras, números, espaços, hífen e sublinhado;
-- espaços repetidos são normalizados;
-- nomes são comparados sem diferenciar maiúsculas de minúsculas;
-- dois jogadores não podem usar o mesmo nome simultaneamente.
+3. Abra a aba **Ports** e acesse a porta `8080`.
+4. Para compartilhar temporariamente, torne a porta pública.
 
 ## Roadmap
 
-- [ ] interpolação de movimento no cliente;
-- [ ] sprites e animações por direção;
-- [ ] controles touch para mobile;
-- [ ] nomes persistentes com autenticação ou banco de dados, se necessário;
-- [ ] salas e mapas separados;
-- [ ] organização do código em módulos;
-- [ ] testes automatizados.
+- [ ] interpolação de movimento;
+- [ ] sprites e animações;
+- [ ] controles touch;
+- [ ] itens e inventário;
+- [ ] mobs e NPCs;
+- [ ] geração procedural e chunks;
+- [ ] organização da configuração compartilhada;
+- [ ] testes automatizados;
+- [ ] sistema de mods/datapacks.
 
 ## Aviso
 
-Este é um ambiente de protótipo. O estado dos jogadores fica apenas na memória e é perdido quando o servidor é reiniciado. Ainda não há autenticação, banco de dados ou proteção contra clientes maliciosos.
+O estado dos jogadores fica apenas na memória e é perdido quando o servidor reinicia. Ainda não há autenticação, banco de dados ou sistema de mods.
