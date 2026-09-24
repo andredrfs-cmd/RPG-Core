@@ -37,6 +37,7 @@
       background: rgba(8, 10, 15, .88);
       z-index: 2;
     }
+    #nameScreen.is-hidden { display: none !important; }
     #nameCard {
       width: min(100%, 380px);
       padding: 28px;
@@ -71,7 +72,7 @@
   </style>
 </head>
 <body>
-  <div id="nameScreen" hidden>
+  <div id="nameScreen" class="is-hidden">
     <section id="nameCard" aria-labelledby="nameTitle">
       <h2 id="nameTitle">Entrar no RPG-Core</h2>
       <p>Escolha o nome que aparecerá para os outros jogadores.</p>
@@ -108,6 +109,20 @@
     let players = [];
     let world = { width: canvas.width, height: canvas.height };
 
+    function showNameScreen(suggestedName) {
+      nameInput.value = suggestedName || '';
+      nameError.textContent = '';
+      nameButton.disabled = false;
+      nameScreen.classList.remove('is-hidden');
+      nameInput.focus();
+      nameInput.select();
+    }
+
+    function hideNameScreen() {
+      nameScreen.classList.add('is-hidden');
+      nameButton.disabled = false;
+    }
+
     function connect() {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       socket = new WebSocket(`${protocol}//${window.location.host}`);
@@ -123,9 +138,7 @@
         if (data.type === 'INIT') {
           myPlayerId = data.id;
           world = data.world || world;
-          nameInput.value = data.suggestedName || data.id;
-          nameScreen.hidden = false;
-          nameInput.focus();
+          showNameScreen(data.suggestedName || data.id);
         }
 
         if (data.type === 'NAME_ERROR') {
@@ -139,7 +152,7 @@
           myPlayerId = data.id;
           myPlayerName = data.name;
           hasEnteredWorld = true;
-          nameScreen.hidden = true;
+          hideNameScreen();
           statusElement.textContent = `Conectado como ${myPlayerName} — jogadores: ${players.length}`;
         }
 
