@@ -7,26 +7,27 @@ const TILE_STYLES = {
 const CHUNK_CELL_SIZE = 16;
 
 function getCellMap(world) {
+  if (world.cellsByKey instanceof Map) return world.cellsByKey;
   if (!world.cells) return new Map();
   return new Map(world.cells.map((cell) => [`${cell.x},${cell.z}`, cell.cellId]));
 }
 
-function getTileType(column, row, world, localPlayer) {
+function getTileType(column, row, world, localPlayer, cellMap) {
   if (column < 0 || row < 0 || column >= world.columns || row >= world.rows) return 'debug';
 
-  const playerX = localPlayer ? Math.floor(localPlayer.x / (world.renderedTileSize || world.tileSize)) : 0;
-  const playerZ = localPlayer ? Math.floor(localPlayer.y / (world.renderedTileSize || world.tileSize)) : 0;
+  const tileSize = world.renderedTileSize || world.tileSize;
+  const playerX = localPlayer ? Math.floor(localPlayer.x / tileSize) : 0;
+  const playerZ = localPlayer ? Math.floor(localPlayer.y / tileSize) : 0;
   const playerChunkX = Math.floor(playerX / CHUNK_CELL_SIZE);
   const playerChunkZ = Math.floor(playerZ / CHUNK_CELL_SIZE);
   const cellChunkX = Math.floor(column / CHUNK_CELL_SIZE);
   const cellChunkZ = Math.floor(row / CHUNK_CELL_SIZE);
+  const viewDistance = world.viewDistanceChunks ?? 1;
 
-  if (Math.abs(cellChunkX - playerChunkX) > (world.viewDistanceChunks ?? 1)
-    || Math.abs(cellChunkZ - playerChunkZ) > (world.viewDistanceChunks ?? 1)) {
-    return 'debug';
-  }
+  if (Math.abs(cellChunkX - playerChunkX) > viewDistance
+    || Math.abs(cellChunkZ - playerChunkZ) > viewDistance) return 'debug';
 
-  return getCellMap(world).get(`${column},${row}`) || 'debug';
+  return cellMap.get(`${column},${row}`) || 'debug';
 }
 
 export function drawWorld(ctx, canvas, world, camera, localPlayer) {
@@ -42,10 +43,11 @@ export function drawWorld(ctx, canvas, world, camera, localPlayer) {
 
   for (let row = firstRow; row <= lastRow; row += 1) {
     for (let column = firstColumn; column <= lastColumn; column += 1) {
-      const type = getTileType(column, row, world, localPlayer);
+      const type = getTileType(column, row, world, localPlayer, cellMap);
       const tile = TILE_STYLES[type] || TILE_STYLES.debug;
       const x = column * tileSize - camera.x;
       const y = row * tileSize - camera.y;
+
       ctx.fillStyle = tile.color;
       ctx.fillRect(x, y, tileSize, tileSize);
       ctx.strokeStyle = tile.line;

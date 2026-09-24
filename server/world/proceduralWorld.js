@@ -9,8 +9,10 @@ const REGION_SEED = 18473;
 const GRASS_CHANCE = 0.8;
 
 function hashCell(seed, x, z) {
-  let value = Math.imul(seed ^ Math.imul(x, 374761393), 668265263);
-  value = Math.imul(value ^ (value >>> 13), 1274126177);
+  let value = seed;
+  value = Math.imul(value ^ Math.imul(x, 374761393), 668265263);
+  value = Math.imul(value ^ Math.imul(z, 1274126177), 2246822519);
+  value = Math.imul(value ^ (value >>> 13), 3266489917);
   value ^= value >>> 16;
   return (value >>> 0) / 4294967296;
 }
@@ -21,11 +23,17 @@ function cellKey(x, z) {
 
 function generateRegion({ regionX = 0, regionY = 0, regionZ = 0, seed = REGION_SEED } = {}) {
   const cells = [];
-  const regionSeed = seed ^ Math.imul(regionX, 73856093) ^ Math.imul(regionY, 19349663) ^ Math.imul(regionZ, 83492791);
+  const regionSeed = seed
+    ^ Math.imul(regionX, 73856093)
+    ^ Math.imul(regionY, 19349663)
+    ^ Math.imul(regionZ, 83492791);
 
   for (let z = 0; z < REGION_CELL_SIZE; z += 1) {
     for (let x = 0; x < REGION_CELL_SIZE; x += 1) {
-      const value = hashCell(regionSeed, x + regionX * REGION_CELL_SIZE, z + regionZ * REGION_CELL_SIZE);
+      const globalX = x + regionX * REGION_CELL_SIZE;
+      const globalZ = z + regionZ * REGION_CELL_SIZE;
+      const value = hashCell(regionSeed, globalX, globalZ);
+
       cells.push({
         x,
         y: 0,
@@ -47,7 +55,9 @@ function generateRegion({ regionX = 0, regionY = 0, regionZ = 0, seed = REGION_S
 
 function createWorld({ seed = REGION_SEED, regionX = 0, regionY = 0, regionZ = 0 } = {}) {
   const generatedRegion = generateRegion({ seed, regionX, regionY, regionZ });
-  const cellsByKey = new Map(generatedRegion.cells.map((cell) => [cellKey(cell.x, cell.z), cell.cellId]));
+  const cellsByKey = new Map(
+    generatedRegion.cells.map((cell) => [cellKey(cell.x, cell.z), cell.cellId])
+  );
 
   return {
     id: 'overworld',
