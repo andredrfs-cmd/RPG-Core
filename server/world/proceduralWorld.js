@@ -13,7 +13,8 @@ const POND_MIN_SIZE = 2;
 const POND_MAX_SIZE = 4;
 const POND_MIN_DISTANCE = 5;
 const POND_MAX_DISTANCE = 10;
-const POND_ATTEMPTS = 48;
+const POND_COUNT = 6;
+const POND_ATTEMPTS = 500;
 
 function hashCell(seed, x, z) {
   let value = seed;
@@ -55,21 +56,22 @@ function distanceBetweenPonds(first, second) {
 function createPonds(seed) {
   const random = createRandom(seed);
   const ponds = [];
+  const minOrigin = 1;
+  const maxOrigin = REGION_CELL_SIZE - POND_MAX_SIZE - 1;
 
-  for (let attempt = 0; attempt < POND_ATTEMPTS; attempt += 1) {
+  for (let attempt = 0; attempt < POND_ATTEMPTS && ponds.length < POND_COUNT; attempt += 1) {
     const pond = {
-      x: randomInt(random, 1, REGION_CELL_SIZE - POND_MAX_SIZE - 1),
-      z: randomInt(random, 1, REGION_CELL_SIZE - POND_MAX_SIZE - 1),
+      x: randomInt(random, minOrigin, maxOrigin),
+      z: randomInt(random, minOrigin, maxOrigin),
       width: randomInt(random, POND_MIN_SIZE, POND_MAX_SIZE),
       height: randomInt(random, POND_MIN_SIZE, POND_MAX_SIZE)
     };
 
-    if (ponds.every((existing) => {
-      const distance = distanceBetweenPonds(existing, pond);
-      return distance >= POND_MIN_DISTANCE && distance <= POND_MAX_DISTANCE;
-    })) {
-      ponds.push(pond);
-    }
+    const distances = ponds.map((existing) => distanceBetweenPonds(existing, pond));
+    const isValid = distances.every((distance) => distance >= POND_MIN_DISTANCE)
+      && (distances.length === 0 || Math.min(...distances) <= POND_MAX_DISTANCE);
+
+    if (isValid) ponds.push(pond);
   }
 
   return ponds;
@@ -121,7 +123,6 @@ function generateRegion({ regionX = 0, regionY = 0, regionZ = 0, seed = REGION_S
         x,
         y: 0,
         z,
-        // Regra estrutural: toda borda é pedra e nunca pode ser água.
         cellId: isBorderCell(x, z) ? 'stone' : (isPondCell(ponds, x, z) ? 'water' : floorId)
       };
       cells.push(cell);
