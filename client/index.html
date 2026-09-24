@@ -7,66 +7,19 @@
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #10131a;
-      color: #fff;
-      font-family: system-ui, sans-serif;
-    }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #10131a; color: #fff; font-family: system-ui, sans-serif; }
     main { width: min(94vw, 860px); text-align: center; }
     h1 { margin: 0 0 8px; }
     #status { color: #aab4c4; margin: 0 0 14px; }
-    canvas {
-      display: block;
-      width: 100%;
-      height: auto;
-      border: 3px solid #344054;
-      background: #080a0f;
-      image-rendering: pixelated;
-    }
+    canvas { display: block; width: 100%; height: auto; border: 3px solid #344054; background: #080a0f; image-rendering: pixelated; }
     .help { color: #aab4c4; font-size: .9rem; }
-    #nameScreen {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      background: rgba(8, 10, 15, .88);
-      z-index: 2;
-    }
+    #nameScreen { position: fixed; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(8, 10, 15, .88); z-index: 2; }
     #nameScreen.is-hidden { display: none !important; }
-    #nameCard {
-      width: min(100%, 380px);
-      padding: 28px;
-      border: 1px solid #344054;
-      border-radius: 12px;
-      background: #171c27;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
-    }
+    #nameCard { width: min(100%, 380px); padding: 28px; border: 1px solid #344054; border-radius: 12px; background: #171c27; box-shadow: 0 12px 40px rgba(0, 0, 0, .35); }
     #nameCard h2 { margin-top: 0; }
     #nameForm { display: flex; gap: 8px; }
-    #nameInput {
-      min-width: 0;
-      flex: 1;
-      padding: 11px;
-      border: 1px solid #52617a;
-      border-radius: 6px;
-      background: #0f131b;
-      color: #fff;
-      font: inherit;
-    }
-    #nameForm button {
-      padding: 11px 16px;
-      border: 0;
-      border-radius: 6px;
-      background: #3b82f6;
-      color: #fff;
-      font: inherit;
-      cursor: pointer;
-    }
+    #nameInput { min-width: 0; flex: 1; padding: 11px; border: 1px solid #52617a; border-radius: 6px; background: #0f131b; color: #fff; font: inherit; }
+    #nameForm button { padding: 11px 16px; border: 0; border-radius: 6px; background: #3b82f6; color: #fff; font: inherit; cursor: pointer; }
     #nameForm button:disabled { opacity: .55; cursor: wait; }
     #nameError { min-height: 1.4em; margin-bottom: 0; color: #ff8787; }
   </style>
@@ -76,11 +29,7 @@
     <section id="nameCard" aria-labelledby="nameTitle">
       <h2 id="nameTitle">Entrar no RPG-Core</h2>
       <p>Escolha o nome que aparecerá para os outros jogadores.</p>
-      <form id="nameForm">
-        <label for="nameInput" hidden>Nome do jogador</label>
-        <input id="nameInput" name="name" type="text" maxlength="16" autocomplete="nickname" required>
-        <button type="submit">Entrar</button>
-      </form>
+      <form id="nameForm"><label for="nameInput" hidden>Nome do jogador</label><input id="nameInput" name="name" type="text" maxlength="16" autocomplete="nickname" required><button type="submit">Entrar</button></form>
       <p id="nameError" role="alert"></p>
     </section>
   </div>
@@ -89,7 +38,7 @@
     <h1>RPG-Core</h1>
     <p id="status">Conectando ao servidor...</p>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <p class="help">Movimente-se com WASD ou as setas. Abra este link em outra aba para testar o multiplayer.</p>
+    <p class="help">Movimente-se com WASD ou as setas. A câmera acompanha o jogador local.</p>
   </main>
 
   <script>
@@ -112,13 +61,7 @@
     let myPlayerName = null;
     let hasEnteredWorld = false;
     let players = [];
-    let world = {
-      width: canvas.width,
-      height: canvas.height,
-      tileSize: 40,
-      columns: 20,
-      rows: 15
-    };
+    let world = { width: canvas.width, height: canvas.height, tileSize: 40, columns: 20, rows: 15 };
 
     function showNameScreen(suggestedName) {
       nameInput.value = suggestedName || '';
@@ -137,28 +80,23 @@
     function connect() {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       socket = new WebSocket(`${protocol}//${window.location.host}`);
-
       socket.addEventListener('open', () => {
         statusElement.textContent = 'Conectado — escolha um nome para entrar';
         statusElement.style.color = '#63e6be';
       });
-
       socket.addEventListener('message', (event) => {
         const data = JSON.parse(event.data);
-
         if (data.type === 'INIT') {
           myPlayerId = data.id;
           world = data.world || world;
           showNameScreen(data.suggestedName || data.id);
         }
-
         if (data.type === 'NAME_ERROR') {
           nameError.textContent = data.message;
           nameButton.disabled = false;
           nameInput.focus();
           nameInput.select();
         }
-
         if (data.type === 'NAME_ACCEPTED') {
           myPlayerId = data.id;
           myPlayerName = data.name;
@@ -166,22 +104,17 @@
           hideNameScreen();
           statusElement.textContent = `Conectado como ${myPlayerName} — jogadores: ${players.length}`;
         }
-
         if (data.type === 'TICK_UPDATE') {
           players = data.players;
           world = data.world || world;
-          if (hasEnteredWorld) {
-            statusElement.textContent = `Conectado como ${myPlayerName} — jogadores: ${players.length}`;
-          }
+          if (hasEnteredWorld) statusElement.textContent = `Conectado como ${myPlayerName} — jogadores: ${players.length}`;
         }
       });
-
       socket.addEventListener('close', () => {
         statusElement.textContent = 'Desconectado do servidor';
         statusElement.style.color = '#ff8787';
         nameButton.disabled = true;
       });
-
       socket.addEventListener('error', () => {
         statusElement.textContent = 'Erro ao conectar ao servidor';
         statusElement.style.color = '#ff8787';
@@ -192,27 +125,18 @@
       event.preventDefault();
       const name = nameInput.value.trim();
       if (!name || !socket || socket.readyState !== WebSocket.OPEN) return;
-
       nameError.textContent = '';
       nameButton.disabled = true;
       socket.send(JSON.stringify({ type: 'SET_NAME', name }));
     });
 
     function sendInputs() {
-      if (socket && socket.readyState === WebSocket.OPEN && hasEnteredWorld) {
-        socket.send(JSON.stringify({ type: 'INPUT', inputs }));
-      }
+      if (socket && socket.readyState === WebSocket.OPEN && hasEnteredWorld) socket.send(JSON.stringify({ type: 'INPUT', inputs }));
     }
 
     function updateInput(key, pressed) {
-      const normalized = key.toLowerCase();
-      const mapping = {
-        w: 'up', arrowup: 'up',
-        s: 'down', arrowdown: 'down',
-        a: 'left', arrowleft: 'left',
-        d: 'right', arrowright: 'right'
-      };
-      const direction = mapping[normalized];
+      const mapping = { w: 'up', arrowup: 'up', s: 'down', arrowdown: 'down', a: 'left', arrowleft: 'left', d: 'right', arrowright: 'right' };
+      const direction = mapping[key.toLowerCase()];
       if (!direction || inputs[direction] === pressed) return;
       inputs[direction] = pressed;
       sendInputs();
@@ -223,38 +147,42 @@
       updateInput(event.key, true);
     });
     window.addEventListener('keyup', (event) => updateInput(event.key, false));
-    window.addEventListener('blur', () => {
-      Object.keys(inputs).forEach((key) => inputs[key] = false);
-      sendInputs();
-    });
+    window.addEventListener('blur', () => { Object.keys(inputs).forEach((key) => inputs[key] = false); sendInputs(); });
+
+    function getLocalPlayer() {
+      return players.find((player) => player.id === myPlayerId) || null;
+    }
+
+    function getCamera() {
+      const localPlayer = getLocalPlayer();
+      const maxX = Math.max(0, world.width - canvas.width);
+      const maxY = Math.max(0, world.height - canvas.height);
+      const targetX = localPlayer ? localPlayer.x - canvas.width / 2 : 0;
+      const targetY = localPlayer ? localPlayer.y - canvas.height / 2 : 0;
+      return {
+        x: Math.max(0, Math.min(targetX, maxX)),
+        y: Math.max(0, Math.min(targetY, maxY))
+      };
+    }
 
     function getTileType(column, row) {
-      if (column < 0 || row < 0 || column >= world.columns || row >= world.rows) {
-        return 'debug';
-      }
-
-      const isBorder = (
-        column === 0 ||
-        row === 0 ||
-        column === world.columns - 1 ||
-        row === world.rows - 1
-      );
-
+      if (column < 0 || row < 0 || column >= world.columns || row >= world.rows) return 'debug';
+      const isBorder = column === 0 || row === 0 || column === world.columns - 1 || row === world.rows - 1;
       return isBorder ? 'water' : 'grass';
     }
 
-    function drawWorld() {
+    function drawWorld(camera) {
       const tileSize = world.tileSize;
-      const visibleColumns = Math.ceil(canvas.width / tileSize);
-      const visibleRows = Math.ceil(canvas.height / tileSize);
+      const firstColumn = Math.floor(camera.x / tileSize) - 1;
+      const firstRow = Math.floor(camera.y / tileSize) - 1;
+      const lastColumn = Math.ceil((camera.x + canvas.width) / tileSize) + 1;
+      const lastRow = Math.ceil((camera.y + canvas.height) / tileSize) + 1;
 
-      for (let row = -1; row <= visibleRows; row += 1) {
-        for (let column = -1; column <= visibleColumns; column += 1) {
-          const type = getTileType(column, row);
-          const tile = TILE[type];
-          const x = column * tileSize;
-          const y = row * tileSize;
-
+      for (let row = firstRow; row <= lastRow; row += 1) {
+        for (let column = firstColumn; column <= lastColumn; column += 1) {
+          const tile = TILE[getTileType(column, row)];
+          const x = column * tileSize - camera.x;
+          const y = row * tileSize - camera.y;
           ctx.fillStyle = tile.color;
           ctx.fillRect(x, y, tileSize, tileSize);
           ctx.strokeStyle = tile.line;
@@ -265,29 +193,29 @@
     }
 
     function render() {
+      const camera = getCamera();
       ctx.fillStyle = TILE.debug.color;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      drawWorld();
+      drawWorld(camera);
 
       players.forEach((player) => {
         const size = 30;
-        const left = player.x - size / 2;
-        const top = player.y - size / 2;
+        const screenX = player.x - camera.x;
+        const screenY = player.y - camera.y;
+        const left = screenX - size / 2;
+        const top = screenY - size / 2;
         ctx.fillStyle = player.color;
         ctx.fillRect(left, top, size, size);
-
         if (player.id === myPlayerId) {
           ctx.strokeStyle = '#7dff7d';
           ctx.lineWidth = 3;
           ctx.strokeRect(left - 2, top - 2, size + 4, size + 4);
         }
-
         ctx.fillStyle = '#fff';
         ctx.font = '12px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(player.name || player.id, player.x, top - 8);
+        ctx.fillText(player.name || player.id, screenX, top - 8);
       });
-
       requestAnimationFrame(render);
     }
 

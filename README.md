@@ -12,7 +12,10 @@ A primeira versão possui:
 - loop de jogo a 20 ticks por segundo;
 - movimento com WASD e setas;
 - movimento diagonal normalizado;
-- mundo inicial de 20x15 blocos, com blocos de 40x40 pixels;
+- mundo de 30x22 blocos, com blocos de 40x40 pixels;
+- tela de 800x600 pixels;
+- câmera seguindo e centralizando o jogador local;
+- câmera limitada às bordas do mundo;
 - borda de água e área interna de grama;
 - colisão autoritativa com a água no servidor;
 - movimento separado por eixo para deslizar nas margens;
@@ -24,7 +27,7 @@ A primeira versão possui:
 - nomes duplicados bloqueados sem usar banco de dados;
 - configuração adequada para execução local e no GitHub Codespaces.
 
-A colisão considera o tamanho do jogador. O jogador precisa permanecer completamente dentro da área interna de grama; a água da borda não é atravessável.
+A colisão considera o tamanho do jogador. O jogador precisa permanecer completamente dentro da área interna de grama; a água da borda não é atravessável. A câmera é calculada apenas no cliente e não altera a posição real do jogador no servidor.
 
 ## Estrutura
 
@@ -83,11 +86,11 @@ O cliente escolhe automaticamente `ws://` localmente e `wss://` quando a página
 | Água | azul | borda bloqueada pelo servidor |
 | Debug | magenta | áreas fora do mapa, usadas apenas como fallback visual |
 
-Como o canvas continua exatamente com 800x600 pixels e o mundo possui 20x15 blocos de 40 pixels, toda a tela é preenchida pelo mapa. Por isso, o bloco de debug não deve aparecer normalmente.
+O mundo agora é maior que o canvas. A câmera mostra apenas uma parte do mapa, acompanha o jogador local e para nas bordas para não exibir uma área inexistente. O bloco de debug só aparece se a câmera ou algum objeto tentar acessar coordenadas fora do mapa.
 
 ## Colisão
 
-A colisão é calculada no servidor. O servidor testa a posição futura do jogador considerando metade do tamanho do personagem. Os eixos horizontal e vertical são testados separadamente, permitindo que o jogador deslize pela margem da água quando tenta se mover na diagonal.
+A colisão é calculada no servidor. O servidor testa a posição futura do jogador considerando metade do tamanho do personagem. Os eixos horizontal e vertical são testados separadamente, permitindo que o jogador deslize pela margem da água.
 
 ## Regras de nome
 
@@ -99,13 +102,12 @@ A colisão é calculada no servidor. O servidor testa a posição futura do joga
 
 ## Roadmap
 
-- [ ] câmera seguindo o jogador local;
-- [ ] mapa maior que a tela;
 - [ ] interpolação de movimento no cliente;
 - [ ] sprites e animações por direção;
 - [ ] controles touch para mobile;
 - [ ] nomes persistentes com autenticação ou banco de dados, se necessário;
 - [ ] salas e mapas separados;
+- [ ] organização do código em módulos;
 - [ ] testes automatizados.
 
 ## Aviso
