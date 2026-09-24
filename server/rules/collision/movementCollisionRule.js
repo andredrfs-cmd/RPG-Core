@@ -1,4 +1,5 @@
-const { PLAYER_SIZE, WORLD: DEFAULT_WORLD } = require('../../config/gameConfig');
+const { PLAYER_SIZE } = require('../../config/gameConfig');
+const { getRegionWorld } = require('../../world/proceduralWorld');
 
 function getCellIdAt(world, column, row) {
   return world.cellsByKey?.get(`${column},${row}`) || 'debug';
@@ -9,35 +10,29 @@ function isWalkableCell(world, column, row) {
   return cellId === 'grass' || cellId === 'stone';
 }
 
-function isWalkableAt(x, y, world = DEFAULT_WORLD, playerSize = PLAYER_SIZE) {
+function isWalkableAt(x, y, world, playerSize = PLAYER_SIZE) {
   const half = playerSize / 2;
   const tileSize = world.renderedTileSize || world.tileSize;
-  const minX = x - half;
-  const maxX = x + half;
-  const minY = y - half;
-  const maxY = y + half;
+  if (x + half < 0 || y + half < 0 || x - half > world.width || y - half > world.height) return false;
 
-  if (maxY < 0 || minY > world.height || maxX < 0 || minX > world.width) return false;
-
-  const firstColumn = Math.max(0, Math.floor(minX / tileSize));
-  const lastColumn = Math.min(world.columns - 1, Math.floor((maxX - Number.EPSILON) / tileSize));
-  const firstRow = Math.max(0, Math.floor(minY / tileSize));
-  const lastRow = Math.min(world.rows - 1, Math.floor((maxY - Number.EPSILON) / tileSize));
+  const firstColumn = Math.floor(Math.max(0, x - half) / tileSize);
+  const lastColumn = Math.min(world.columns - 1, Math.floor(Math.min(world.width - Number.EPSILON, x + half) / tileSize));
+  const firstRow = Math.floor(Math.max(0, y - half) / tileSize);
+  const lastRow = Math.min(world.rows - 1, Math.floor(Math.min(world.height - Number.EPSILON, y + half) / tileSize));
 
   for (let row = firstRow; row <= lastRow; row += 1) {
     for (let column = firstColumn; column <= lastColumn; column += 1) {
       if (!isWalkableCell(world, column, row)) return false;
     }
   }
-
   return true;
 }
 
-function tryMove(player, deltaX, deltaY, world = DEFAULT_WORLD, playerSize = PLAYER_SIZE) {
+function tryMove(player, deltaX, deltaY, regionWorld, playerSize = PLAYER_SIZE) {
   const nextX = player.x + deltaX;
   const nextY = player.y + deltaY;
-  if (isWalkableAt(nextX, player.y, world, playerSize)) player.x = nextX;
-  if (isWalkableAt(player.x, nextY, world, playerSize)) player.y = nextY;
+  if (isWalkableAt(nextX, player.y, regionWorld, playerSize)) player.x = nextX;
+  if (isWalkableAt(player.x, nextY, regionWorld, playerSize)) player.y = nextY;
 }
 
 module.exports = { getCellIdAt, isWalkableCell, isWalkableAt, tryMove };

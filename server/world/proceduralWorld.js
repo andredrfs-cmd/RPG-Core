@@ -22,12 +22,13 @@ function cellKey(x, z) {
   return `${x},${z}`;
 }
 
+function regionKey(x, y, z) {
+  return `${x},${y},${z}`;
+}
+
 function generateRegion({ regionX = 0, regionY = 0, regionZ = 0, seed = REGION_SEED } = {}) {
   const cells = [];
-  const regionSeed = seed
-    ^ Math.imul(regionX, 73856093)
-    ^ Math.imul(regionY, 19349663)
-    ^ Math.imul(regionZ, 83492791);
+  const regionSeed = seed ^ Math.imul(regionX, 73856093) ^ Math.imul(regionY, 19349663) ^ Math.imul(regionZ, 83492791);
 
   for (let z = 0; z < REGION_CELL_SIZE; z += 1) {
     for (let x = 0; x < REGION_CELL_SIZE; x += 1) {
@@ -41,19 +42,13 @@ function generateRegion({ regionX = 0, regionY = 0, regionZ = 0, seed = REGION_S
   return { seed, region: { x: regionX, y: regionY, z: regionZ }, cells };
 }
 
-function applyRegion(world, regionX, regionY = 0, regionZ = 0) {
-  const generated = generateRegion({ seed: world.seed, regionX, regionY, regionZ });
-  world.region = generated.region;
-  world.cells = generated.cells;
-  world.cellsByKey = new Map(generated.cells.map((cell) => [cellKey(cell.x, cell.z), cell.cellId]));
-  return world;
-}
-
-function createWorld({ seed = REGION_SEED, regionX = 0, regionY = 0, regionZ = 0 } = {}) {
-  const world = {
+function createRegionWorld({ seed = REGION_SEED, regionX = 0, regionY = 0, regionZ = 0 } = {}) {
+  const generated = generateRegion({ seed, regionX, regionY, regionZ });
+  return {
     id: 'overworld',
     layerId: 'surface',
     seed,
+    region: generated.region,
     width: REGION_CELL_SIZE * RENDERED_TILE_SIZE,
     height: REGION_CELL_SIZE * RENDERED_TILE_SIZE,
     tileSize: RENDERED_TILE_SIZE,
@@ -65,50 +60,40 @@ function createWorld({ seed = REGION_SEED, regionX = 0, regionY = 0, regionZ = 0
     regionChunkSize: REGION_CHUNK_SIZE,
     regionCellSize: REGION_CELL_SIZE,
     viewDistanceChunks: 1,
-    cells: [],
-    cellsByKey: new Map(),
-    cellDefinitions: [getCell('grass'), getCell('stone'), getCell('debug')],
-    region: { x: regionX, y: regionY, z: regionZ }
+    cells: generated.cells,
+    cellsByKey: new Map(generated.cells.map((cell) => [cellKey(cell.x, cell.z), cell.cellId])),
+    cellDefinitions: [getCell('grass'), getCell('stone'), getCell('debug')]
   };
-
-  return applyRegion(world, regionX, regionY, regionZ);
 }
 
-function transitionRegion(world, player) {
-  let regionX = world.region.x;
-  let regionZ = world.region.z;
-  let changed = false;
+function createWorld(options = {}) {
+  const world = {
+    seed: options.seed ?? REGION_SEED,
+    regions: new Map()
+  };
+  getRegionWorld(world, options.regionX ?? 0, options.regionY ?? 0, options.regionZ ?? 0);
+  return world;
+}
 
-  while (player.x < 0) {
-    player.x += world.width;
-    regionX -= 1;
-    changed = true;
+function getRegionWorld(world, regionX, regionY = 0, regionZ = 0) {
+  const key = regionKey(regionX, regionY, regionZ);
+  if (!world.regions.has(key)) {
+    world.regions.set(key, createRegionWorld({ seed: world.seed, regionX, regionY, regionZ }));
   }
-  while (player.x >= world.width) {
-    player.x -= world.width;
-    regionX += 1;
-    changed = true;
-  }
-  while (player.y < 0) {
-    player.y += world.height;
-    regionZ -= 1;
-    changed = true;
-  }
-  while (player.y >= world.height) {
-    player.y -= world.height;
-    regionZ += 1;
-    changed = true;
-  }
+  return world.regions.get(key);
+}
 
-  if (changed) applyRegion(world, regionX, world.region.y, regionZ);
-  return changed;
+function serializeRegionWorld(regionWorld) {
+  const { cellsByKey, cellDefinitions, ...publicWorld } = regionWorld;
+  return publicWorld;
 }
 
 module.exports = {
   generateRegion,
+  createRegionWorld,
   createWorld,
-  applyRegion,
-  transitionRegion,
+  getRegionWorld,
+  serializeRegionWorld,
   cellKey,
   CHUNK_CELL_SIZE,
   REGION_CHUNK_SIZE,

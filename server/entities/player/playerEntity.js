@@ -1,24 +1,24 @@
-const { WORLD } = require('../../config/gameConfig');
+const { PLAYER_SIZE } = require('../../config/gameConfig');
 const { createWorldLocation } = require('../../coordinates/worldCoordinates');
 const { createBaseStats } = require('../../rules/stats/baseStatsRule');
 
-function createPlayer(socket, idNumber, world = WORLD, colors = ['#00ff00', '#ff4d4d', '#00d9ff', '#ffe14d', '#ff66e8', '#ffffff']) {
+function createPlayer(socket, idNumber, regionWorld, colors = ['#00ff00', '#ff4d4d', '#00d9ff', '#ffe14d', '#ff66e8', '#ffffff']) {
   const id = `player_${idNumber}`;
+  const centerX = Math.round(regionWorld.width / 2);
+  const centerY = Math.round(regionWorld.height / 2);
+  const region = regionWorld.region;
 
   return {
     id,
     name: null,
     ready: false,
-    x: Math.round(world.width / 2),
-    y: Math.round(world.height / 2),
+    x: centerX,
+    y: centerY,
     location: createWorldLocation({
-      worldId: 'overworld',
-      layerId: 'surface',
-      position: {
-        x: Math.floor(world.columns / 2),
-        y: 0,
-        z: Math.floor(world.rows / 2)
-      }
+      worldId: regionWorld.id,
+      layerId: regionWorld.layerId,
+      region,
+      position: { x: Math.floor(centerX / regionWorld.tileSize), y: 0, z: Math.floor(centerY / regionWorld.tileSize) }
     }),
     color: colors[(idNumber - 1) % colors.length],
     direction: 'down',
@@ -42,7 +42,4 @@ function serializePlayer(player) {
   };
 }
 
-module.exports = {
-  createPlayer,
-  serializePlayer
-};
+module.exports = { createPlayer, serializePlayer };
