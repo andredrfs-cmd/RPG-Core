@@ -1,21 +1,5 @@
 const LOGICAL_CELL_SIZE = 16;
 const RENDERED_TILE_SIZE = 32;
-const VIEW_COLUMNS = 32;
-const VIEW_ROWS = 32;
-const { createWorld } = require('../world/proceduralWorld');
-
-const WORLD = {
-  ...createWorld(),
-  width: VIEW_COLUMNS * RENDERED_TILE_SIZE,
-  height: VIEW_ROWS * RENDERED_TILE_SIZE,
-  columns: VIEW_COLUMNS,
-  rows: VIEW_ROWS,
-  tileSize: RENDERED_TILE_SIZE,
-  renderedTileSize: RENDERED_TILE_SIZE,
-  logicalCellSize: LOGICAL_CELL_SIZE
-};
-
-const TILE_SIZE = RENDERED_TILE_SIZE;
 const PLAYER_SIZE = 24;
 const TICK_RATE = 20;
 const TICK_INTERVAL = 1000 / TICK_RATE;
@@ -35,17 +19,13 @@ const DEFAULT_PLAYER_STATS = {
 };
 
 module.exports = {
-  PORT,
-  HOST,
-  WORLD,
-  TILE_SIZE,
   LOGICAL_CELL_SIZE,
   RENDERED_TILE_SIZE,
-  VIEW_COLUMNS,
-  VIEW_ROWS,
   PLAYER_SIZE,
   TICK_RATE,
   TICK_INTERVAL,
+  PORT,
+  HOST,
   COLORS,
   NAME_MIN_LENGTH,
   NAME_MAX_LENGTH,
