@@ -1,28 +1,20 @@
 const { PLAYER_SIZE } = require('../../config/gameConfig');
-const { getRegionWorld } = require('../../world/proceduralWorld');
+const { getCell } = require('../../world/worldManager');
 
-function getCellIdAt(world, column, row) {
-  return world.cellsByKey?.get(`${column},${row}`) || 'debug';
-}
-
-function isWalkableCell(world, column, row) {
-  const cellId = getCellIdAt(world, column, row);
-  return cellId === 'grass' || cellId === 'stone';
-}
-
-function isWalkableAt(x, y, world, playerSize = PLAYER_SIZE) {
+function isWalkableAt(x, y, regionWorld, playerSize = PLAYER_SIZE) {
   const half = playerSize / 2;
-  const tileSize = world.renderedTileSize || world.tileSize;
-  if (x + half < 0 || y + half < 0 || x - half > world.width || y - half > world.height) return false;
+  const tileSize = regionWorld.renderedTileSize || regionWorld.tileSize;
+  if (x + half < 0 || y + half < 0 || x - half > regionWorld.width || y - half > regionWorld.height) return false;
 
-  const firstColumn = Math.floor(Math.max(0, x - half) / tileSize);
-  const lastColumn = Math.min(world.columns - 1, Math.floor(Math.min(world.width - Number.EPSILON, x + half) / tileSize));
-  const firstRow = Math.floor(Math.max(0, y - half) / tileSize);
-  const lastRow = Math.min(world.rows - 1, Math.floor(Math.min(world.height - Number.EPSILON, y + half) / tileSize));
+  const firstColumn = Math.max(0, Math.floor((x - half) / tileSize));
+  const lastColumn = Math.min(regionWorld.columns - 1, Math.floor((x + half - Number.EPSILON) / tileSize));
+  const firstRow = Math.max(0, Math.floor((y - half) / tileSize));
+  const lastRow = Math.min(regionWorld.rows - 1, Math.floor((y + half - Number.EPSILON) / tileSize));
 
   for (let row = firstRow; row <= lastRow; row += 1) {
     for (let column = firstColumn; column <= lastColumn; column += 1) {
-      if (!isWalkableCell(world, column, row)) return false;
+      if (!regionWorld.cellsByKey?.get(`${column},${row}`)) return false;
+      if (!['grass', 'stone'].includes(regionWorld.cellsByKey.get(`${column},${row}`))) return false;
     }
   }
   return true;
@@ -35,4 +27,4 @@ function tryMove(player, deltaX, deltaY, regionWorld, playerSize = PLAYER_SIZE) 
   if (isWalkableAt(player.x, nextY, regionWorld, playerSize)) player.y = nextY;
 }
 
-module.exports = { getCellIdAt, isWalkableCell, isWalkableAt, tryMove };
+module.exports = { getCell, isWalkableAt, tryMove };

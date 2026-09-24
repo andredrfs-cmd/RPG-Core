@@ -14,26 +14,14 @@ let tickCount = 0;
 
 function sendState(player) {
   if (player.socket.readyState !== WebSocket.OPEN) return;
-  const region = player.location.region;
+  const { region } = player.location;
   const regionWorld = getRegionWorld(WORLD, region.x, region.y, region.z);
-  player.socket.send(JSON.stringify({
-    type: 'TICK_UPDATE',
-    tick: tickCount,
-    world: serializeRegionWorld(regionWorld),
-    players: Array.from(players.values())
-      .filter((other) => other.ready && other.location.region.x === region.x && other.location.region.y === region.y && other.location.region.z === region.z)
-      .map(serializePlayer)
-  }));
+  player.socket.send(JSON.stringify({ type: 'TICK_UPDATE', tick: tickCount, world: serializeRegionWorld(regionWorld), players: Array.from(players.values()).filter((other) => other.ready && other.location.region.x === region.x && other.location.region.y === region.y && other.location.region.z === region.z).map(serializePlayer) }));
 }
 
 const httpServer = http.createServer(createStaticServer(path.join(__dirname, '..', 'client')));
 const websocketServer = new WebSocketServer({ server: httpServer });
-attachWebSocketHandlers(websocketServer, players, {
-  world: getRegionWorld(WORLD, 0, 0, 0),
-  colors: COLORS,
-  nextPlayerId: 1,
-  onPlayerCreated: (player) => console.log(`🟢 ${player.id} conectou. Jogadores: ${players.size}`)
-});
+attachWebSocketHandlers(websocketServer, players, { world: getRegionWorld(WORLD, 0, 0, 0), colors: COLORS, nextPlayerId: 1, onPlayerCreated: (player) => console.log(`🟢 ${player.id} conectou. Jogadores: ${players.size}`) });
 
 setInterval(() => {
   tickCount += 1;

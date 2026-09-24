@@ -3,7 +3,6 @@ const TILE_STYLES = {
   stone: { color: '#777b82', line: '#62666d' },
   debug: { color: '#ff00ff', line: '#ff8cff' }
 };
-const CHUNK_CELL_SIZE = 16;
 
 function getCellMap(world) {
   if (world.cellsByKey instanceof Map) return world.cellsByKey;
@@ -15,12 +14,8 @@ function getTileType(column, row, world, localPlayer, cellMap) {
   const tileSize = world.renderedTileSize || world.tileSize;
   const playerX = localPlayer ? Math.floor(localPlayer.x / tileSize) : 0;
   const playerZ = localPlayer ? Math.floor(localPlayer.y / tileSize) : 0;
-  const playerChunkX = Math.floor(playerX / CHUNK_CELL_SIZE);
-  const playerChunkZ = Math.floor(playerZ / CHUNK_CELL_SIZE);
-  const cellChunkX = Math.floor(column / CHUNK_CELL_SIZE);
-  const cellChunkZ = Math.floor(row / CHUNK_CELL_SIZE);
-  const viewDistance = world.viewDistanceChunks ?? 1;
-  if (Math.abs(cellChunkX - playerChunkX) > viewDistance || Math.abs(cellChunkZ - playerChunkZ) > viewDistance) return 'debug';
+  const viewDistance = world.viewDistanceCells ?? 5;
+  if (Math.abs(column - playerX) > viewDistance || Math.abs(row - playerZ) > viewDistance) return 'debug';
   return cellMap.get(`${column},${row}`) || 'debug';
 }
 
