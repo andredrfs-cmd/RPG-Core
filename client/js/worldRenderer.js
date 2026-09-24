@@ -1,5 +1,7 @@
 const TILE_STYLES = {
   grass: { color: '#4f8f45', line: '#42783a' },
+  water: { color: '#2876b8', line: '#23669f' },
+  deep_water: { color: '#123c73', line: '#0e315e' },
   stone: { color: '#777b82', line: '#62666d' },
   debug: { color: '#ff00ff', line: '#ff8cff' }
 };
@@ -14,7 +16,7 @@ function getTileType(column, row, world, localPlayer, cellMap) {
   const tileSize = world.renderedTileSize || world.tileSize;
   const playerX = localPlayer ? Math.floor(localPlayer.x / tileSize) : 0;
   const playerZ = localPlayer ? Math.floor(localPlayer.y / tileSize) : 0;
-  const viewDistance = world.viewDistanceCells ?? 5;
+  const viewDistance = world.viewDistanceCells ?? 16;
   if (Math.abs(column - playerX) > viewDistance || Math.abs(row - playerZ) > viewDistance) return 'debug';
   return cellMap.get(`${column},${row}`) || 'debug';
 }
@@ -26,6 +28,7 @@ export function drawWorld(ctx, canvas, world, camera, localPlayer) {
   const lastColumn = Math.ceil((camera.x + canvas.width) / tileSize) + 1;
   const lastRow = Math.ceil((camera.y + canvas.height) / tileSize) + 1;
   const cellMap = getCellMap(world);
+
   ctx.fillStyle = TILE_STYLES.debug.color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   for (let row = firstRow; row <= lastRow; row += 1) {

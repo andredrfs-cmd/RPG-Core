@@ -8,22 +8,25 @@ function syncPlayerLocation(player, regionWorld) {
   const cellX = Math.max(0, Math.min(regionWorld.columns - 1, Math.floor(player.x / size)));
   const cellZ = Math.max(0, Math.min(regionWorld.rows - 1, Math.floor(player.y / size)));
   player.location = createWorldLocation({
-    worldId: regionWorld.id, layerId: regionWorld.layerId, region: regionWorld.region,
+    worldId: regionWorld.id,
+    layerId: regionWorld.layerId,
+    region: regionWorld.region,
     chunk: { x: Math.floor(cellX / regionWorld.chunkCellSize), z: Math.floor(cellZ / regionWorld.chunkCellSize) },
     position: { x: cellX % regionWorld.chunkCellSize, y: 0, z: cellZ % regionWorld.chunkCellSize }
   });
 }
 
 function transitionRegion(world, player) {
-  let x = player.location.region.x;
-  let z = player.location.region.z;
-  const current = getRegionWorld(world, x, player.location.region.y, z);
-  let changed = false;
-  if (player.x < 0) { player.x += current.width; x -= 1; changed = true; }
-  if (player.x >= current.width) { player.x -= current.width; x += 1; changed = true; }
-  if (player.y < 0) { player.y += current.height; z -= 1; changed = true; }
-  if (player.y >= current.height) { player.y -= current.height; z += 1; changed = true; }
-  const next = getRegionWorld(world, x, player.location.region.y, z);
+  let regionX = player.location.region.x;
+  let regionZ = player.location.region.z;
+  const current = getRegionWorld(world, regionX, player.location.region.y, regionZ);
+
+  if (player.x < 0) { player.x += current.width; regionX -= 1; }
+  if (player.x >= current.width) { player.x -= current.width; regionX += 1; }
+  if (player.y < 0) { player.y += current.height; regionZ -= 1; }
+  if (player.y >= current.height) { player.y -= current.height; regionZ += 1; }
+
+  const next = getRegionWorld(world, regionX, player.location.region.y, regionZ);
   syncPlayerLocation(player, next);
   return next;
 }
@@ -32,12 +35,14 @@ function updatePlayerMovement(player, world) {
   if (!player.ready) return;
   const { horizontal, vertical, isMoving, direction } = computeDirection(player.inputs);
   player.isMoving = isMoving;
-  let regionWorld = getRegionWorld(world, player.location.region.x, player.location.region.y, player.location.region.z);
+  const regionWorld = getRegionWorld(world, player.location.region.x, player.location.region.y, player.location.region.z);
+
   if (isMoving) {
     const length = Math.hypot(horizontal, vertical) || 1;
     tryMove(player, (horizontal / length) * player.stats.speed, (vertical / length) * player.stats.speed, regionWorld);
     player.direction = direction;
   }
+
   transitionRegion(world, player);
 }
 

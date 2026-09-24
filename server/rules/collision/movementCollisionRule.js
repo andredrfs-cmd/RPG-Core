@@ -1,10 +1,10 @@
 const { PLAYER_SIZE } = require('../../config/gameConfig');
-const { getCell } = require('../../world/worldManager');
 
 function isWalkableAt(x, y, regionWorld, playerSize = PLAYER_SIZE) {
   const half = playerSize / 2;
   const tileSize = regionWorld.renderedTileSize || regionWorld.tileSize;
-  if (x + half < 0 || y + half < 0 || x - half > regionWorld.width || y - half > regionWorld.height) return false;
+
+  if (x + half < 0 || y + half < 0 || x - half > regionWorld.width || y - half > regionWorld.height) return true;
 
   const firstColumn = Math.max(0, Math.floor((x - half) / tileSize));
   const lastColumn = Math.min(regionWorld.columns - 1, Math.floor((x + half - Number.EPSILON) / tileSize));
@@ -13,10 +13,11 @@ function isWalkableAt(x, y, regionWorld, playerSize = PLAYER_SIZE) {
 
   for (let row = firstRow; row <= lastRow; row += 1) {
     for (let column = firstColumn; column <= lastColumn; column += 1) {
-      if (!regionWorld.cellsByKey?.get(`${column},${row}`)) return false;
-      if (!['grass', 'stone'].includes(regionWorld.cellsByKey.get(`${column},${row}`))) return false;
+      const cellId = regionWorld.cellsByKey?.get(`${column},${row}`);
+      if (cellId !== 'grass' && cellId !== 'stone') return false;
     }
   }
+
   return true;
 }
 
@@ -27,4 +28,4 @@ function tryMove(player, deltaX, deltaY, regionWorld, playerSize = PLAYER_SIZE) 
   if (isWalkableAt(player.x, nextY, regionWorld, playerSize)) player.y = nextY;
 }
 
-module.exports = { getCell, isWalkableAt, tryMove };
+module.exports = { isWalkableAt, tryMove };
